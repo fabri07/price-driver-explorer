@@ -42,6 +42,7 @@ def run_full_analysis(
     *,
     include_macro: bool = True,
     run_xgb: bool = True,
+    run_rf: bool = True,
     use_cache: bool = True,
 ) -> AssetResult:
     """Ejecuta dataset + modelado y devuelve el AssetResult (sin LLM).
@@ -61,8 +62,9 @@ def run_full_analysis(
     )
     print(f"      Dataset: {dataset.X.shape[0]} filas, {dataset.X.shape[1]} features.")
 
-    print("[2/3] Modelando (Lasso" + (" + XGBoost/SHAP" if run_xgb else "") + ")...")
-    result = engine.analyze(dataset, run_xgb=run_xgb)
+    metodos = "Lasso" + (" + XGBoost/SHAP" if run_xgb else "") + (" + RandomForest/SHAP" if run_rf else "")
+    print(f"[2/3] Modelando ({metodos})...")
+    result = engine.analyze(dataset, run_xgb=run_xgb, run_rf=run_rf)
 
     print("[3/3] Listo.")
     return result
@@ -93,7 +95,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Análisis de asociaciones de un activo.")
     parser.add_argument("ticker", help=f"Activo objetivo (ej. {', '.join(TICKERS_OBJETIVO)})")
     parser.add_argument("--sin-resumen", action="store_true", help="No llamar al LLM.")
-    parser.add_argument("--sin-xgb", action="store_true", help="Solo Lasso (omite XGBoost/SHAP).")
+    parser.add_argument("--sin-xgb", action="store_true", help="Omite XGBoost/SHAP.")
+    parser.add_argument("--sin-rf", action="store_true", help="Omite RandomForest/SHAP.")
     parser.add_argument("--sin-macro", action="store_true", help="Omite variables macro (FRED).")
     parser.add_argument("--noticias", action="store_true", help="Muestra noticias recientes del activo.")
     args = parser.parse_args(argv)
@@ -103,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
             args.ticker.upper(),
             include_macro=not args.sin_macro,
             run_xgb=not args.sin_xgb,
+            run_rf=not args.sin_rf,
         )
     except Exception as exc:
         print(f"\nERROR: {exc}", file=sys.stderr)

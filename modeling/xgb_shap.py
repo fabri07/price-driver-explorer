@@ -12,10 +12,10 @@ SHAP descompone la predicción en contribuciones por variable, comparables entre
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from modeling.results import ValidationReport, VariableWeight
+from modeling.shap_attrib import signed_shap_importance
 from modeling.stability import weight_stability
 from modeling.validation import walk_forward_rmse
 
@@ -47,31 +47,6 @@ def make_xgb() -> "XGBRegressor":  # noqa: F821 (tipo perezoso)
     )
 
 
-def _shap_signed_importance(model: XGBRegressor, X: pd.DataFrame) -> dict[str, float]:
-    """Importancia |SHAP| media con signo, por variable.
-
-    Devuelve {variable -> valor_con_signo} donde la magnitud es |SHAP| medio y el
-    signo refleja la dirección dominante del efecto.
-    """
-    import shap
-
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X.values)  # (n_obs, n_features)
-
-    out: dict[str, float] = {}
-    for j, col in enumerate(X.columns):
-        sv = shap_values[:, j]
-        magnitud = float(np.mean(np.abs(sv)))
-        # Signo: correlación entre el valor del feature y su contribución SHAP.
-        feat = X[col].values
-        if np.std(feat) > 1e-12 and np.std(sv) > 1e-12:
-            corr = float(np.corrcoef(feat, sv)[0, 1])
-        else:
-            corr = 0.0
-        out[col] = magnitud if corr >= 0 else -magnitud
-    return out
-
-
 def fit_xgb_shap(X: pd.DataFrame, y: pd.Series) -> tuple[list[VariableWeight], ValidationReport]:
     """Ajusta XGBoost, calcula atribución SHAP, estabilidad y validación OOS."""
     columns = list(X.columns)
@@ -79,13 +54,13 @@ def fit_xgb_shap(X: pd.DataFrame, y: pd.Series) -> tuple[list[VariableWeight], V
     # --- Ajuste completo + SHAP ------------------------------------------
     model = make_xgb()
     model.fit(X.values, y.values)
-    signed = _shap_signed_importance(model, X)
+    signed = signed_shap_importance(model, X)
 
     # --- Estabilidad por bootstrap (sobre la importancia SHAP) -----------
     def coef_fn(X_sub: pd.DataFrame, y_sub: pd.Series) -> dict[str, float]:
         m = make_xgb()
         m.fit(X_sub.values, y_sub.values)
-        return _shap_signed_importance(m, X_sub)
+        return signed_shap_importance(m, X_sub)
 
     estab = weight_stability(coef_fn, X, y, n_resamples=15)  # menos resamples: XGB es caro
 

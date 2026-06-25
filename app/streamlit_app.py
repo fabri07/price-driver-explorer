@@ -207,9 +207,11 @@ st.caption(
 
 # --- Cacheamos el análisis pesado por (ticker, opciones) -------------
 @st.cache_data(show_spinner=False)
-def _cached_analysis(ticker: str, include_macro: bool, run_xgb: bool) -> AssetResult:
+def _cached_analysis(ticker: str, include_macro: bool, run_xgb: bool, run_rf: bool) -> AssetResult:
     """Corre el pipeline y cachea el resultado (datos + modelado)."""
-    return run_full_analysis(ticker, include_macro=include_macro, run_xgb=run_xgb)
+    return run_full_analysis(
+        ticker, include_macro=include_macro, run_xgb=run_xgb, run_rf=run_rf
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -493,7 +495,20 @@ with st.sidebar:
     st.divider()
     include_macro = st.checkbox("Incluir variables macro (FRED)", value=True)
     run_xgb = st.checkbox("Incluir XGBoost + SHAP", value=True)
-    metodo = st.radio("Método a graficar", ["lasso", "xgboost_shap"], index=0)
+    run_rf = st.checkbox(
+        "Incluir RandomForest + SHAP", value=True,
+        help="Tercer método (bagging): actúa como desempate cuando Lasso y XGBoost "
+             "discrepan. Suma tiempo de cómputo; destildalo para correr más rápido.",
+    )
+    _NOMBRE_METODO = {
+        "lasso": "Lasso (lineal)",
+        "xgboost_shap": "XGBoost + SHAP (boosting)",
+        "random_forest": "RandomForest + SHAP (bagging)",
+    }
+    metodo = st.radio(
+        "Método a graficar", ["lasso", "xgboost_shap", "random_forest"],
+        index=0, format_func=lambda m: _NOMBRE_METODO.get(m, m),
+    )
 
     st.divider()
     st.markdown("**Noticias (contexto cualitativo):**")
@@ -510,7 +525,7 @@ with st.sidebar:
 if analizar:
     try:
         with st.spinner(f"Descargando datos y modelando {ticker}... (puede tardar)"):
-            result = _cached_analysis(ticker, include_macro, run_xgb)
+            result = _cached_analysis(ticker, include_macro, run_xgb, run_rf)
         st.session_state["_result_obj"] = result
         st.session_state["_ticker"] = ticker
     except Exception as exc:

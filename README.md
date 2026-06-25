@@ -18,7 +18,7 @@ causalidad, ni que una relación de fundamentos. Las diferencias importan:
 
 - **No es correlación simple (de a pares).** Una correlación de Pearson mide si dos
   series suben y bajan juntas *ignorando todo lo demás*. Acá los pesos salen de modelos
-  **multivariados** (Lasso, XGBoost): el peso de una variable es su aporte *manteniendo
+  **multivariados** (Lasso, XGBoost, RandomForest): el peso de una variable es su aporte *manteniendo
   constantes a las otras*. Dos variables muy correlacionadas entre sí pueden quedar con
   pesos muy distintos —el Lasso conserva una y descarta la redundante—, así que **un peso
   no es una correlación**.
@@ -53,8 +53,9 @@ Para un activo (NVDA, GOOGL, TSLA, MSFT, AAPL, AMZN, META):
 1. Descarga precios del activo y de su contexto **definido a mano** (selección manual,
    no automática), más macro de FRED.
 2. Calcula qué variables se asociaron a sus retornos log diarios, con peso, signo y
-   estabilidad, usando **dos métodos**: Lasso (lineal, interpretable) y XGBoost+SHAP
-   (no lineal).
+   estabilidad, usando **tres métodos**: Lasso (lineal), XGBoost+SHAP (boosting, no
+   lineal) y RandomForest+SHAP (bagging) — este último actúa como **desempate** cuando
+   los dos primeros discrepan.
 3. Valida **out-of-sample** contra baselines naive y reporta si el modelo aporta.
 4. Genera un resumen en español con un LLM, fuertemente acotado a lenguaje de
    asociación.
@@ -68,7 +69,7 @@ Para un activo (NVDA, GOOGL, TSLA, MSFT, AAPL, AMZN, META):
 config/         # grafo de relaciones (definido a mano), series FRED, settings
 data_sources/   # interfaces abstractas + YFinance (precios/noticias/ficha) / FRED / WorldBank / SEC EDGAR
 pipeline/        # retornos, anti look-ahead, alineación, ensamblado del dataset
-modeling/        # Lasso, XGBoost+SHAP, validación OOS, estabilidad, orquestador
+modeling/        # Lasso, XGBoost+SHAP, RandomForest+SHAP, validación OOS, estabilidad, orquestador
 explanation/    # system prompt acotado + llamada a la API de Anthropic
 analysis/        # métricas de desempeño + panel macro (para los paneles de la UI)
 app/             # interfaz Streamlit (tabs), gráficos plotly, exportación
@@ -76,7 +77,7 @@ run_analysis.py # orquestador CLI (end-to-end sin UI)
 ```
 
 La interfaz Streamlit tiene **cuatro pestañas**:
-- **📊 Asociaciones** — pesos del modelo (Lasso / XGBoost+SHAP), validación OOS y el resumen del LLM (descargable).
+- **📊 Asociaciones** — pesos del modelo (Lasso / XGBoost+SHAP / RandomForest+SHAP), validación OOS y el resumen del LLM (descargable).
 - **🏢 Overview** — ficha tipo *finviz* (sector, market cap, P/E, beta, márgenes), desempeño calculado de los precios (retornos por ventana, volatilidad, drawdown, beta vs S&P 500, rango de 52 semanas) y **ratios financieros desde SEC EDGAR**¹ en 5 categorías (rentabilidad, liquidez, apalancamiento, eficiencia, valuación), con lectura cualitativa y fecha del dato.
 
 > ¹ **SEC EDGAR** es la base de datos pública de la **SEC** (Securities and Exchange

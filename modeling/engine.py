@@ -10,17 +10,20 @@ from __future__ import annotations
 
 from pipeline.dataset import AssetDataset
 from modeling.lasso_model import fit_lasso
+from modeling.random_forest import fit_rf_shap
 from modeling.results import AssetResult, VariableWeight
 from modeling.xgb_shap import fit_xgb_shap
 
 
-def analyze(dataset: AssetDataset, *, run_xgb: bool = True) -> AssetResult:
+def analyze(dataset: AssetDataset, *, run_xgb: bool = True, run_rf: bool = True) -> AssetResult:
     """Corre el análisis completo sobre un dataset ya ensamblado.
 
     Parameters
     ----------
     dataset : AssetDataset con X, y y metadata.
-    run_xgb : si False, omite XGBoost/SHAP (más rápido; solo Lasso).
+    run_xgb : si False, omite XGBoost/SHAP (más rápido).
+    run_rf : si False, omite RandomForest/SHAP (más rápido). El tercer método actúa
+        como desempate entre Lasso (lineal) y XGBoost (boosting).
 
     Returns
     -------
@@ -49,8 +52,18 @@ def analyze(dataset: AssetDataset, *, run_xgb: bool = True) -> AssetResult:
             variables.extend(_inject_meta(pesos_xgb, dataset))
             validaciones.append(val_xgb)
         except Exception as exc:
-            # XGBoost/SHAP es opcional; si falla, seguimos con Lasso.
-            print(f"  [aviso] XGBoost/SHAP falló, sigo solo con Lasso: {exc}")
+            # XGBoost/SHAP es opcional; si falla, seguimos con los demás.
+            print(f"  [aviso] XGBoost/SHAP falló, lo omito: {exc}")
+
+    # --- Método 3: RandomForest + SHAP (desempate por bagging) -----------
+    if run_rf:
+        try:
+            pesos_rf, val_rf = fit_rf_shap(X, y)
+            variables.extend(_inject_meta(pesos_rf, dataset))
+            validaciones.append(val_rf)
+        except Exception as exc:
+            # RandomForest/SHAP es opcional; si falla, seguimos con los demás.
+            print(f"  [aviso] RandomForest/SHAP falló, lo omito: {exc}")
 
     rango = (
         X.index.min().date().isoformat(),
