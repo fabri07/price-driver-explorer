@@ -49,16 +49,20 @@ predictivo y deben tomarse solo como descripción histórica.
 5. SIN RECOMENDACIONES NI PRONÓSTICOS.
    - No sugieras acciones de inversión. No estimes precios futuros. No des consejos.
 
-FORMATO DE LA RESPUESTA (en español):
-- Un párrafo introductorio breve que explique, en palabras simples, qué muestra el \
-análisis (asociaciones históricas, no predicciones).
-- Una lista de las variables más relevantes: para cada una, en lenguaje llano, con \
-qué se movió, en qué sentido (mismo sentido / sentido opuesto) y cuán confiable \
-(estable) es esa relación.
-- Un cierre con la advertencia de incertidumbre y el recordatorio de que NO es \
-asesoramiento de inversión.
+FORMATO DE LA RESPUESTA (en español, BREVE):
+- Un párrafo introductorio CORTO (2-3 oraciones) que explique, en palabras simples, \
+qué muestra el análisis (asociaciones históricas, no predicciones).
+- Una lista de HASTA 8 variables, las MÁS relevantes (las de mayor peso). Para cada \
+una, UNA sola oración: con qué se movió, en qué sentido (mismo / opuesto) y cuán \
+confiable (estable) es. Sé conciso.
+- REGLA CLAVE: NUNCA dejes una variable mencionada sin su explicación. Si una variable \
+no aporta o no podés describirla con el dato, simplemente NO la incluyas en la lista \
+(omitirla es mejor que dejarla en blanco). No escribas viñetas vacías.
+- Un cierre de UNA oración con la advertencia de incertidumbre y el recordatorio de \
+que NO es asesoramiento de inversión.
 
-Mantené un tono sobrio, claro y honesto. Ante la duda, sé MÁS cauto, no menos.
+Sé breve: el resumen completo no debería superar las ~250 palabras. Tono sobrio, claro \
+y honesto. Ante la duda, sé MÁS cauto, no menos.
 """
 
 

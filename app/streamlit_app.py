@@ -163,6 +163,22 @@ def _inject_estilo_terminal() -> None:
 
         /* Pestaña/sidebar: separador verde sutil */
         section[data-testid="stSidebar"] { border-right: 1px solid var(--verde-tenue); }
+
+        /* Resumen del LLM: letra más chica y compacta (achica el cuadro explicativo) */
+        .st-key-llm_resumen p,
+        .st-key-llm_resumen li,
+        .st-key-llm_resumen blockquote {
+            font-size: 0.82rem !important;
+            line-height: 1.5;
+        }
+        .st-key-llm_resumen li { margin-bottom: 0.12rem; }
+        .st-key-llm_resumen h1,
+        .st-key-llm_resumen h2,
+        .st-key-llm_resumen h3 {
+            font-size: 1rem !important;
+            margin: 0.4rem 0 0.3rem 0;
+        }
+        .st-key-llm_resumen hr { margin: 0.5rem 0; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -578,7 +594,8 @@ with tab_asoc:
         try:
             with st.spinner("Generando resumen honesto (LLM)..."):
                 resumen = _cached_summary(result.to_dict())
-            st.write(resumen)
+            with st.container(key="llm_resumen"):
+                st.markdown(resumen)
         except Exception as exc:
             resumen = ""
             st.error(f"No se pudo generar el resumen: {exc}")
