@@ -10,11 +10,48 @@ resumen en lenguaje natural, honesto sobre la incertidumbre.
 
 ---
 
+## ¿Qué significa "asociación"? (y qué **NO** es)
+
+Esta es la pieza conceptual más importante del proyecto. La herramienta mide
+**asociación estadística multivariada**. Eso **no** es lo mismo que correlación, ni que
+causalidad, ni que una relación de fundamentos. Las diferencias importan:
+
+- **No es correlación simple (de a pares).** Una correlación de Pearson mide si dos
+  series suben y bajan juntas *ignorando todo lo demás*. Acá los pesos salen de modelos
+  **multivariados** (Lasso, XGBoost): el peso de una variable es su aporte *manteniendo
+  constantes a las otras*. Dos variables muy correlacionadas entre sí pueden quedar con
+  pesos muy distintos —el Lasso conserva una y descarta la redundante—, así que **un peso
+  no es una correlación**.
+- **No es causalidad.** Que el retorno de un proveedor se mueva junto al de la acción no
+  significa que lo *cause*. Suele haber un **factor común** detrás (el ciclo de los
+  semiconductores, una sorpresa macro, el apetito de riesgo del día) que mueve a ambos.
+  El sistema describe **co-movimiento**, no mecanismo.
+- **No es análisis de fundamentos.** El modelo no lee el balance ni proyecta flujos para
+  explicar el precio. Solo mira el **co-movimiento de los retornos diarios**. (El análisis
+  de fundamentos vive aparte, en la pestaña Overview, y es puramente descriptivo.)
+
+**Fundamento estadístico.** Los pesos se estiman en muestra finita, con regularización
+(penalización L1 del Lasso) o como importancia media |SHAP|, y se **validan fuera de
+muestra** contra baselines naive: si el modelo no le gana al baseline, los pesos son ruido
+y la interfaz lo marca explícitamente. La **estabilidad** mide qué tan consistente es cada
+peso entre distintas ventanas de tiempo (1 = estable, 0 = inestable).
+
+**Fundamento financiero.** Los retornos co-mueven por factores compartidos reales: mismo
+sector, cadena de suministro, exposición macro común, sentimiento de riesgo. El grafo de
+relaciones codifica esas hipótesis a mano; el modelo mide **cuáles se sostienen en los
+datos** y cuáles no.
+
+> En una frase: describe **con qué se movió** un activo — no **por qué**, ni **qué va a
+> hacer**.
+
+---
+
 ## ¿Qué hace?
 
-Para un activo (NVDA, GOOGL, TSLA por defecto):
+Para un activo (NVDA, GOOGL, TSLA, MSFT, AAPL, AMZN, META):
 
-1. Descarga precios del activo y de su contexto curado, más macro de FRED.
+1. Descarga precios del activo y de su contexto **definido a mano** (selección manual,
+   no automática), más macro de FRED.
 2. Calcula qué variables se asociaron a sus retornos log diarios, con peso, signo y
    estabilidad, usando **dos métodos**: Lasso (lineal, interpretable) y XGBoost+SHAP
    (no lineal).
@@ -28,7 +65,7 @@ Para un activo (NVDA, GOOGL, TSLA por defecto):
 ## Estructura
 
 ```
-config/         # grafo de relaciones (curado a mano), series FRED, settings
+config/         # grafo de relaciones (definido a mano), series FRED, settings
 data_sources/   # interfaces abstractas + YFinance (precios/noticias/ficha) / FRED / WorldBank / SEC EDGAR
 pipeline/        # retornos, anti look-ahead, alineación, ensamblado del dataset
 modeling/        # Lasso, XGBoost+SHAP, validación OOS, estabilidad, orquestador
@@ -40,18 +77,27 @@ run_analysis.py # orquestador CLI (end-to-end sin UI)
 
 La interfaz Streamlit tiene **cuatro pestañas**:
 - **📊 Asociaciones** — pesos del modelo (Lasso / XGBoost+SHAP), validación OOS y el resumen del LLM (descargable).
-- **🏢 Overview** — ficha tipo *finviz* (sector, market cap, P/E, beta, márgenes), desempeño calculado de los precios (retornos por ventana, volatilidad, drawdown, beta vs S&P 500, rango de 52 semanas) y **ratios financieros desde SEC EDGAR** en 5 categorías (rentabilidad, liquidez, apalancamiento, eficiencia, valuación), con lectura cualitativa y fecha del dato.
+- **🏢 Overview** — ficha tipo *finviz* (sector, market cap, P/E, beta, márgenes), desempeño calculado de los precios (retornos por ventana, volatilidad, drawdown, beta vs S&P 500, rango de 52 semanas) y **ratios financieros desde SEC EDGAR**¹ en 5 categorías (rentabilidad, liquidez, apalancamiento, eficiencia, valuación), con lectura cualitativa y fecha del dato.
+
+> ¹ **SEC EDGAR** es la base de datos pública de la **SEC** (Securities and Exchange
+> Commission, el regulador bursátil de EE.UU.). **EDGAR** (*Electronic Data Gathering,
+> Analysis, and Retrieval*) almacena los reportes que las empresas que cotizan están
+> obligadas a presentar —el **10-K** (anual) y el **10-Q** (trimestral)—, de donde el
+> proyecto saca los estados contables para calcular los ratios. Es gratis y oficial.
 - **🌐 Macro** — valor actual de cada serie FRED + el peso/sentido/estabilidad que el modelo le asignó al activo (lenguaje de asociación).
 - **📰 Noticias** — titulares recientes (contexto cualitativo).
 
 Overview y Macro son **descriptivos**: no son señales del modelo ni recomendaciones.
 
-El **grafo de relaciones** (`config/relationship_graph.py`) es el dato curado a mano
-y el activo más valioso del proyecto. Tiene **dos niveles**:
+El **grafo de relaciones** (`config/relationship_graph.py`) es el activo más valioso del
+proyecto. Está **definido a mano** — o sea, **seleccionado manualmente con criterio de
+dominio, no generado por un algoritmo**: cada competidor, proveedor y par sectorial se
+eligió y justificó uno por uno. Un buen mapa de relaciones es la diferencia entre señal y
+ruido. Tiene **dos niveles**:
 
 - `RELATIONSHIP_GRAPH`: entidades con cotización **líquida en EE.UU.** (NYSE/NASDAQ o
   ADRs negociables) que **sí alimentan** el modelo de retornos diarios.
-- `ENTIDADES_NO_LISTADAS`: conocimiento curado de actores **privados** (Cerebras,
+- `ENTIDADES_NO_LISTADAS`: conocimiento definido a mano de actores **privados** (Cerebras,
   Groq, OpenAI, Anthropic, Waymo…) o de cotización **no usable** (OTC ilíquido /
   bolsas extranjeras sin ADR: Samsung, SK Hynix, Foxconn, CATL, LG Energy…). NO
   entran al modelo (un precio rancio genera retornos falsos), pero quedan

@@ -455,9 +455,9 @@ with st.sidebar:
     st.header("Configuración")
     ticker = st.selectbox("Activo objetivo", TICKERS_OBJETIVO)
 
-    # Mostramos el grafo curado del activo elegido.
+    # Mostramos el grafo definido a mano del activo elegido.
     rel = RELATIONSHIP_GRAPH.get(ticker, {})
-    st.markdown("**Contexto curado (entra al modelo):**")
+    st.markdown("**Contexto definido a mano (entra al modelo):**")
     st.markdown(f"- Competidores: {', '.join(rel.get('competidores', [])) or '—'}")
     st.markdown(f"- Proveedores: {', '.join(rel.get('proveedores', [])) or '—'}")
     st.markdown(f"- Contexto: {', '.join(rel.get('contexto', [])) or '—'}")
