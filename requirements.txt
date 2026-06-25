@@ -1,0 +1,22 @@
+# Núcleo de datos y modelado
+pandas>=2.1
+numpy>=1.26
+scikit-learn>=1.4
+xgboost>=2.0
+shap>=0.44
+
+# Visualización e interfaz
+plotly>=5.18
+streamlit>=1.31
+
+# Fuentes de datos
+yfinance>=0.2.40        # precios (desarrollo/validación; sin licencia comercial)
+fredapi>=0.5.1          # macro FRED (requiere FRED_API_KEY)
+requests>=2.31          # World Bank API y SEC EDGAR
+
+# LLM (capa de explicación)
+anthropic>=0.40         # requiere ANTHROPIC_API_KEY
+
+# Infraestructura
+python-dotenv>=1.0      # carga de .env
+pyarrow>=15.0           # cache en parquet

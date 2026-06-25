@@ -1,0 +1,10 @@
+# Tema oscuro tipo terminal de trading (negro + verde fósforo).
+# El estilo tipográfico fino (serif editorial + monospace de datos) y la identidad
+# verde se inyectan por CSS en app/streamlit_app.py (Google Fonts); acá fijamos la base.
+[theme]
+base = "dark"
+primaryColor = "#00D982"             # verde fósforo (acentos, botones, foco)
+backgroundColor = "#0A0F0C"          # negro con leve tinte verde
+secondaryBackgroundColor = "#111815" # paneles / sidebar
+textColor = "#E4EDE8"                # papel frío (blanco levemente verde)
+font = "serif"

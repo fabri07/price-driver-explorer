@@ -1,0 +1,27 @@
+# --- Secretos / credenciales (NUNCA subir) ---
+.env
+.streamlit/secrets.toml
+
+# --- Cache de datos en runtime (se regenera) ---
+.cache/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Entornos virtuales ---
+.venv/
+venv/
+env/
+
+# --- Herramientas locales / editor ---
+.claude/
+.vscode/
+.idea/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
