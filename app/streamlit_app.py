@@ -178,7 +178,7 @@ st.markdown(
     """
     <div class="hero">
       <div class="hero-eyebrow">Terminal de asociaciones · educativo</div>
-      <h1 class="hero-q"><span class="prompt">&rsaquo;</span>¿Qué es lo que mueve el precio de este activo?<span class="caret"></span></h1>
+      <h1 class="hero-q"><span class="prompt">&rsaquo;</span>¿Con qué se asoció el movimiento de este activo?<span class="caret"></span></h1>
     </div>
     """,
     unsafe_allow_html=True,
